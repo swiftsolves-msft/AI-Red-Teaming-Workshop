@@ -106,4 +106,4 @@ client = AzureOpenAI(
 
 Ensure your identity has the Cognitive Services OpenAI User role.
 
-**Proceed with the rest of the notebook steps.**
+## Proceed to [Module 2: Run AI red team evaluations agent](./Module%202%20-%20Run%20AI%20red%20team%20evaluations%20agent.md)
