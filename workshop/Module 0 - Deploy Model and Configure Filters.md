@@ -65,4 +65,4 @@ With the content filter at the lowest settings and Prompt Shields OFF, you demon
 
 > Safety disclaimer: Use the relaxed filter configuration solely within this isolated workshop environment. Always restore stricter filters (`HighSafetyAITest`) or defaults before exposing endpoints beyond this exercise.
 
-## Proceed to [Module 1: Participant ML Notebook Setup Instructions](./workshop/Module%201%20-%20Participant%20ML%20Notebook%20Setup%20Instructions.md)
+## Proceed to [Module 1: Participant ML Notebook Setup Instructions](./workshop/Module%200%20-%20Deploy%20Model%20and%20Configure%20Filters.md)
