@@ -42,7 +42,7 @@ Click Connect and deploy.
 8. Click Create a content filter.
 ![Guards](../images/guard2.png "Guards")
 
-9. Name the content filter `LowSafetyAITest`, choose the connection created from the model deployment, then click Next.
+9. Name the content filter `LowSafetyAITest` and click Next.
 ![Guards](../images/guard3.png "Guards")
 
 10. Adjust the input filters as shown. Set them to the lowest blocking level and turn OFF Prompt Shields, then click Next.
@@ -53,7 +53,7 @@ You can learn more from the following Learn document: [Content filtering overvie
 11. Adjust the output filters likewise. Set them to the lowest blocking level and turn OFF Prompt Shields, then click Next.
 ![Guards](../images/guard5.png "Guards")
 
-12. On the connection screen, check the `gpt-4o-mini` model name and click Next, then choose Replace.
+12. On the connection screen, check the `gpt-4o-mini` model name and click Next.  If prompted to replace the existing content filter, click Replace.
 ![Guards](../images/guard6.png "Guards")
 
 13. Scroll down and create the filter.
