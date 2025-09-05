@@ -40,3 +40,5 @@ Increase the objectives count and optionally introduce additional attack strateg
 ### Advanced and custom attack
 
 Add bespoke high-risk or application-specific prompt objectives and enable more complex PyRIT transformation strategies. Correlate successful attacks with mitigations (system messages, content filters) before progressing to production.
+
+## Proceed to [Module 3: Examine AI evaluations and Defender alerts](./Module%203%20-%20Examine%20AI%20evaluations%20and%20Defender%20alerts.md)
