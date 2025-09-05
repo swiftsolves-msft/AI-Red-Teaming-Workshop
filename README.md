@@ -1,12 +1,12 @@
-# AI-Red-team-evaluations-workshop
+# AI Red Teaming Workshop
 
-AI Red team evaluations workshop material.
+AI Red Teaming Workshop material.
 
 This workshop deploys an Azure AI Foundry hub & project, a traditional Azure Machine Learning workspace, and supporting resources (Storage, Key Vault, App Insights, Container Registry, Cognitive Services) to provide an environment for running Azure AI red teaming evaluations.
 
 > Workshop execution environment: Notebooks (e.g., `AIRT.ipynb`) are expected to run on the provisioned Azure ML **compute instance** (remote kernel) created by the template. This provides a consistent, RBAC-enabled environment and avoids local machine dependency drift. You can run locally, but screenshots, timing, and identity assumptions in the modules all target the managed compute scenario.
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2FAI-Red-team-evaluations-workshop%2Fmain%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2FAI-Red-Teaming-Workshop%2Fmain%2Fazuredeploy.json)
 
 > **Avg deployment time: ~15 min**
 >
