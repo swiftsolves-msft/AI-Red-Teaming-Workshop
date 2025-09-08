@@ -7,6 +7,12 @@
             "metadata": {
                 "description": "Microsoft Entra (AAD) Object ID of the user to assign the compute instance. Get via: az ad signed-in-user show --query id -o tsv"
             }
+        },
+        "resourceTags": {
+            "type": "object",
+            "defaultValue": {
+                "Project": "AI Red Team Workshop"
+            }
         }
     },
     "variables": {
@@ -41,6 +47,7 @@
             "apiVersion": "2023-01-01",
             "name": "[variables('storageAccountName')]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "sku": { "name": "Standard_LRS" },
             "kind": "StorageV2",
             "properties": {
@@ -54,6 +61,7 @@
             "apiVersion": "2023-07-01",
             "name": "[variables('keyVaultName')]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "properties": {
                 "sku": {
                     "family": "A",
@@ -69,6 +77,7 @@
             "apiVersion": "2020-02-02",
             "name": "[variables('appInsightsName')]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "kind": "web",
             "properties": {
                 "Application_Type": "web",
@@ -81,6 +90,7 @@
             "apiVersion": "2023-07-01",
             "name": "[variables('containerRegistryName')]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "sku": { "name": "Basic" },
             "properties": {
                 "adminUserEnabled": true,
@@ -92,6 +102,7 @@
             "apiVersion": "2023-05-01",
             "name": "[variables('cognitiveServiceName')]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "sku": { "name": "S0" },
             "kind": "AIServices",
             "identity": { "type": "SystemAssigned" },
@@ -108,6 +119,7 @@
             "dependsOn": [
                 "[resourceId('Microsoft.CognitiveServices/accounts', variables('cognitiveServiceName'))]"
             ],
+            "tags": "[parameters('resourceTags')]",
             "sku": {
                 "name": "[variables('openAIDeploymentSkuConst')]",
                 "capacity": "[variables('openAIDeploymentCapacityConst')]"
@@ -133,6 +145,7 @@
             ],
             "identity": { "type": "SystemAssigned" },
             "kind": "Hub",
+            "tags": "[parameters('resourceTags')]",
             "sku": {
                 "name": "Basic",
                 "tier": "Basic"
@@ -167,6 +180,7 @@
             ],
             "identity": { "type": "SystemAssigned" },
             "kind": "Project",
+            "tags": "[parameters('resourceTags')]",
             "sku": {
                 "name": "Basic",
                 "tier": "Basic"
@@ -185,6 +199,7 @@
             "apiVersion": "2023-01-01",
             "name": "[variables('traditionalStorageAccountName')]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "sku": { "name": "Standard_LRS" },
             "kind": "StorageV2",
             "properties": {
@@ -198,6 +213,7 @@
             "apiVersion": "2023-07-01",
             "name": "[variables('traditionalKeyVaultName')]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "properties": {
                 "sku": {
                     "family": "A",
@@ -213,6 +229,7 @@
             "apiVersion": "2020-02-02",
             "name": "[variables('traditionalAppInsightsName')]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "kind": "web",
             "properties": {
                 "Application_Type": "web",
@@ -225,6 +242,7 @@
             "apiVersion": "2023-07-01",
             "name": "[variables('traditionalContainerRegistryName')]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "sku": { "name": "Basic" },
             "properties": {
                 "adminUserEnabled": true,
@@ -236,6 +254,7 @@
             "apiVersion": "2023-04-01",
             "name": "[variables('traditionalWorkspaceEffectiveName')]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('traditionalStorageAccountName'))]",
                 "[resourceId('Microsoft.KeyVault/vaults', variables('traditionalKeyVaultName'))]",
@@ -265,6 +284,7 @@
             "apiVersion": "2023-04-01",
             "name": "[concat(variables('traditionalWorkspaceEffectiveName'), '/', variables('computeInstanceName'))]",
             "location": "[resourceGroup().location]",
+            "tags": "[parameters('resourceTags')]",
             "dependsOn": [
                 "[resourceId('Microsoft.MachineLearningServices/workspaces', variables('traditionalWorkspaceEffectiveName'))]"
             ],
