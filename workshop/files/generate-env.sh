@@ -1,34 +1,26 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euo pipefail  # Fail fast: -e exit on error, -u undefined var error, -o pipefail propagates pipeline failures
 
-# generate-env.sh
-# Generate a .env file for the workshop given a resource group.
-# Requirements: az CLI logged in (az login), access to the target resource group.
-# Usage: ./scripts/generate-env.sh -g <resource-group> [-o output_file]
-# Defaults: output_file = .env in current working directory.
+# generate-env.sh - Minimal workshop env generator
+# Requires Azure CLI login & access to the target resource group.
 
 SCRIPT_NAME=$(basename "$0")
-OUTPUT_FILE=".env"
+OUTPUT_FILE=".env"  # Fixed for workshop
 RESOURCE_GROUP=""
 
 usage() {
   cat <<EOF
 ${SCRIPT_NAME} - Generate workshop .env
 
-Usage: ${SCRIPT_NAME} -g <resource-group> [-o <output-file>]
+Usage: ${SCRIPT_NAME}
 
 Options:
-  -g, --resource-group   (required) Resource group name that contains the deployment
-  -o, --output-file      Output file path for .env (default: ./.env)
-  -h, --help             Show this help
+  -h, --help     Show this help
 
 Behavior:
-  * Derives project workspace name: <rg>-project
-  * Fetches subscription id
-  * Locates Cognitive Services (AIServices/OpenAI) account in the RG (prompts if multiple)
-  * Builds endpoint URL
-  * Retrieves API key (key1)
-  * Writes .env with fixed deployment variables
+  * Autodetect RG: env var -> single Cognitive Services RG -> <rg>-project ML workspace heuristic.
+  * Prompt only if multiple Cognitive Services accounts.
+  * Write .env used by notebooks.
 
 Environment variables written:
   AZURE_RESOURCE_GROUP_NAME
@@ -45,25 +37,22 @@ EOF
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -g|--resource-group)
-      RESOURCE_GROUP="$2"; shift 2 ;;
-    -o|--output-file)
-      OUTPUT_FILE="$2"; shift 2 ;;
     -h|--help)
       usage; exit 0 ;;
     *)
       echo "[ERROR] Unknown argument: $1" >&2
       usage
-      exit 1
-      ;;
+      exit 1 ;;
   esac
 done
 
-if [[ -z "$RESOURCE_GROUP" ]]; then
-  echo "[ERROR] --resource-group (-g) is required" >&2
-  usage
-  exit 1
+# If env var set, honor it first
+if [[ -n "${AZURE_RESOURCE_GROUP_NAME:-}" ]]; then
+  RESOURCE_GROUP="$AZURE_RESOURCE_GROUP_NAME"
+  echo "[INFO] Using resource group from AZURE_RESOURCE_GROUP_NAME: $RESOURCE_GROUP" >&2
 fi
+
+# Pre-flight Azure CLI check happens before further autodetection needing subscription
 
 # Pre-flight checks
 if ! command -v az >/dev/null 2>&1; then
@@ -82,7 +71,54 @@ if ! SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null); then
   fi
 fi
 
-echo "[INFO] Subscription: ${SUBSCRIPTION_ID}" >&2
+# Subscription acquired (silent)
+
+# Autodetect resource group if still empty: find RGs that have AIServices/OpenAI accounts
+if [[ -z "$RESOURCE_GROUP" ]]; then
+  echo "[INFO] Attempting resource group autodetection..." >&2
+  # List cognitive services accounts (name + resourceGroup)
+  mapfile -t CS_LINES < <(az resource list --resource-type Microsoft.CognitiveServices/accounts --query "[?kind=='AIServices'||kind=='OpenAI'].[name,resourceGroup]" -o tsv 2>/dev/null || true)
+  if [[ ${#CS_LINES[@]} -eq 0 ]]; then
+  echo "[ERROR] No Cognitive Services accounts found in subscription; cannot determine resource group." >&2
+    exit 1
+  fi
+  # Extract unique RG names
+  declare -A RG_SET
+  for line in "${CS_LINES[@]}"; do
+    rg_name="${line##*$'\t'}" # last field
+    RG_SET["$rg_name"]=1
+  done
+  RG_CANDIDATES=("${!RG_SET[@]}")
+  if [[ ${#RG_CANDIDATES[@]} -eq 1 ]]; then
+    RESOURCE_GROUP="${RG_CANDIDATES[0]}"
+    echo "[INFO] Autodetected resource group: $RESOURCE_GROUP" >&2
+  else
+    echo "[INFO] Multiple candidate resource groups detected: ${RG_CANDIDATES[*]}" >&2
+    echo "[INFO] Applying ML workspace heuristic (<rg>-project) to refine..." >&2
+    workspace_filtered=()
+    for rg in "${RG_CANDIDATES[@]}"; do
+      if az resource show -g "$rg" -n "${rg}-project" --resource-type Microsoft.MachineLearningServices/workspaces >/dev/null 2>&1; then
+        workspace_filtered+=("$rg")
+      fi
+    done
+    if [[ ${#workspace_filtered[@]} -eq 1 ]]; then
+      RESOURCE_GROUP="${workspace_filtered[0]}"
+      echo "[INFO] Autodetected resource group via ML workspace heuristic: $RESOURCE_GROUP" >&2
+    else
+      if [[ ${#workspace_filtered[@]} -eq 0 ]]; then
+  echo "[ERROR] Ambiguous: none of the candidate RGs has a <rg>-project ML workspace. Set AZURE_RESOURCE_GROUP_NAME." >&2
+      else
+  echo "[ERROR] Still ambiguous after heuristic (${workspace_filtered[*]}). Set AZURE_RESOURCE_GROUP_NAME." >&2
+      fi
+      exit 1
+    fi
+  fi
+fi
+
+if [[ -z "$RESOURCE_GROUP" ]]; then
+  echo "[ERROR] Unable to determine resource group. Set AZURE_RESOURCE_GROUP_NAME and re-run." >&2
+  exit 1
+fi
 
 # Validate RG exists
 if ! az group show -n "$RESOURCE_GROUP" >/dev/null 2>&1; then
@@ -100,7 +136,6 @@ if [[ ${#ACCOUNT_NAMES[@]} -eq 0 ]]; then
   exit 3
 fi
 
-SELECTED_ACCOUNT=""
 if [[ ${#ACCOUNT_NAMES[@]} -eq 1 ]]; then
   SELECTED_ACCOUNT="${ACCOUNT_NAMES[0]}"
   echo "[INFO] Using Cognitive Services account: ${SELECTED_ACCOUNT}" >&2
@@ -161,13 +196,6 @@ echo "$ENV_CONTENT" > "$OUTPUT_FILE"
 MASKED_KEY="${OPENAI_KEY:0:4}****${OPENAI_KEY: -4}"
 [[ -z "$OPENAI_KEY" ]] && MASKED_KEY="(empty)"
 
-echo "[INFO] Wrote ${OUTPUT_FILE}" >&2
-echo "[SUMMARY]" >&2
-echo "  Resource Group:   ${RESOURCE_GROUP}" >&2
-echo "  Project Name:     ${PROJECT_NAME}" >&2
-echo "  Subscription ID:  ${SUBSCRIPTION_ID}" >&2
-echo "  OpenAI Account:   ${SELECTED_ACCOUNT}" >&2
-echo "  Endpoint:         ${ENDPOINT}" >&2
-echo "  Key (masked):     ${MASKED_KEY}" >&2
+echo "[INFO] .env written (rg=${RESOURCE_GROUP} project=${PROJECT_NAME} acct=${SELECTED_ACCOUNT} sub=${SUBSCRIPTION_ID} endpoint=${ENDPOINT} key=${MASKED_KEY})" >&2
 
 exit 0
